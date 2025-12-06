@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Modern Password Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ====== CSS RESET ====== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* ====== ROOT VARIABLES ====== */
+    :root {
+      --bg-start: #f5f7fa;
+      --bg-end: #c3cfe2;
+      --card-bg: #ffffff;
+      --accent: #6366f1;
+      --accent-dark: #4f46e5;
+      --text-primary: #1f2937;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --success: #10b981;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      --transition: all 0.3s ease;
+    }
+
+    /* ====== DARK MODE VARIABLES ====== */
+    body.dark {
+      --bg-start: #0f172a;
+      --bg-end: #1e293b;
+      --card-bg: #1e293b;
+      --text-primary: #f3f4f6;
+      --text-secondary: #9ca3af;
+      --border: #374151;
+      --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ====== GLOBAL STYLES ====== */
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-start), var(--bg-end));
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      padding: 20px;
+      transition: var(--transition);
+    }
+
+    /* ====== CARD ====== */
+    .card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 420px;
+      padding: 32px 28px;
+      animation: fadeIn 0.6s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    /* ====== PASSWORD DISPLAY ====== */
+    .password-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    #passwordOutput {
+      flex: 1;
+      background: var(--bg-start);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 18px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      color: var(--text-primary);
+      user-select: all;
+      overflow-x: auto;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    /* Custom scrollbar for password output */
+    #passwordOutput::-webkit-scrollbar {
+      height: 6px;
+    }
+
+    #passwordOutput::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #passwordOutput::-webkit-scrollbar-thumb {
+      background: var(--accent);
+      border-radius: 3px;
+    }
+
+    body.dark #passwordOutput::-webkit-scrollbar-thumb {
+      background: var(--accent-dark);
+    }
+
+    .copy-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .copy-btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .copy-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* ====== SLIDER ====== */
+    .slider-wrapper {
+      margin-bottom: 20px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: var(--accent-dark);
+    }
+
+    /* ====== TOGGLES ====== */
+    .toggle-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+    }
+
+    .toggle input[type="checkbox"] {
+      display: none;
+    }
+
+    .toggle label {
+      cursor: pointer;
+      width: 40px;
+      height: 22px;
+      background: var(--border);
+      border-radius: 11px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .toggle input:checked + label {
+      background: var(--accent);
+    }
+
+    .toggle label::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      transition: var(--transition);
+    }
+
+    .toggle input:checked + label::after {
+      transform: translateX(18px);
+    }
+
+    /* ====== GENERATE BUTTON ====== */
+    .generate-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .generate-btn:hover {
+      background: var(--accent-dark);
+    }
+
+    .generate-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ====== TOAST NOTIFICATION ====== */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--success);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    /* ====== THEME TOGGLE BUTTON ====== */
+    .theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+    }
+
+    .theme-toggle svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--text-primary);
+    }
+
+    /* ====== CREATOR FOOTER ====== */
+    .creator {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: var(--text-secondary);
+      opacity: 0.8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .creator a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .creator a:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    .creator svg {
+      width: 18px;
+      height: 18px;
+      fill: var(--text-secondary);
+    }
+
+    /* ====== RESPONSIVE DESIGN ====== */
+    @media (max-width: 480px) {
+      .card {
+        padding: 24px 20px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+      }
+
+      #passwordOutput {
+        font-size: 16px;
+        padding: 12px 14px;
+      }
+
+      .generate-btn {
+        font-size: 14px;
+        padding: 14px;
+      }
+
+      .theme-toggle {
+        width: 36px;
+        height: 36px;
+      }
+
+      .theme-toggle svg {
+        width: 18px;
+        height: 18px;
+      }
+    }
+  </style>
+</head>
+<body class="dark">
+
+  <!-- ====== THEME TOGGLE ====== -->
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <svg class="sun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" style="display:none;">
+      <path d="M12 17.5A5.5 5.5 0 1112 6.5a5.5 5.5 0 010 11zM12 2a1 1 0 011 1v2a1 1 0 01-2 0V3a1 1 0 011-1zm0 16a1 1 0 011 1v2a1 1 0 01-2 0v-2a1 1 0 011-1zm6.36-4.36l1.41 1.41a1 1 0 01-1.41 1.41l-1.41-1.41a1 1 0 111.41-1.41zm-12.72 0l1.41 1.41a1 1 0 01-1.41 1.41L3.52 14.1a1 1 0 111.41-1.41zM12 7a5 5 0 100 10 5 5 0 000-10z" />
+    </svg>
+    <svg class="moon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <path d="M21.64 13.5A7.96 7.96 0 0112 20a8 8 0 118-8 7.96 7.96 0 01-1.36 4.5zM12 18a6 6 0 100-12 6 6 0 000 12z" />
+    </svg>
+  </button>
+
+  <!-- ====== MAIN CARD ====== -->
+  <div class="card">
+    <h1>Password Generator</h1>
+    <p class="subtitle">Generate strong, secure passwords in seconds.</p>
+
+    <!-- Password output + copy -->
+    <div class="password-display">
+      <input id="passwordOutput" type="text" readonly value="••••••••••••" />
+      <button class="copy-btn" id="copyBtn" aria-label="Copy password">
+        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+          <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+          <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Length slider -->
+    <div class="slider-wrapper">
+      <div class="slider-label">
+        <span>Length</span>
+        <span id="lengthValue">16</span>
+      </div>
+      <input type="range" id="lengthSlider" min="8" max="32" value="16" />
+    </div>
+
+    <!-- Toggles -->
+    <div class="toggle-group">
+      <div class="toggle">
+        <span>Uppercase</span>
+        <input type="checkbox" id="uppercase" checked />
+        <label for="uppercase"></label>
+      </div>
+      <div class="toggle">
+        <span>Lowercase</span>
+        <input type="checkbox" id="lowercase" checked />
+        <label for="lowercase"></label>
+      </div>
+      <div class="toggle">
+        <span>Numbers</span>
+        <input type="checkbox" id="numbers" checked />
+        <label for="numbers"></label>
+      </div>
+      <div class="toggle">
+        <span>Symbols</span>
+        <input type="checkbox" id="symbols" checked />
+        <label for="symbols"></label>
+      </div>
+    </div>
+
+    <!-- Generate button -->
+    <button class="generate-btn" id="generateBtn">Generate Password</button>
+  </div>
+
+  <!-- ====== CREATOR NAME WITH GITHUB LINK ====== -->
+  <div class="creator">
+    <span>Created by Amit Kadam</span>
+    <a href="https://github.com/amitkadam96k" target="_blank" rel="noopener noreferrer" aria-label="GitHub Profile">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+    </a>
+  </div>
+
+  <!-- Toast notification -->
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script>
+    /* ====== ELEMENT SELECTORS ====== */
+    const passwordOutput = document.getElementById('passwordOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    const lengthSlider = document.getElementById('lengthSlider');
+    const lengthValue = document.getElementById('lengthValue');
+    const uppercaseEl = document.getElementById('uppercase');
+    const lowercaseEl = document.getElementById('lowercase');
+    const numbersEl = document.getElementById('numbers');
+    const symbolsEl = document.getElementById('symbols');
+    const generateBtn = document.getElementById('generateBtn');
+    const toast = document.getElementById('toast');
+    const themeToggle = document.getElementById('themeToggle');
+    const sunIcon = document.querySelector('.sun');
+    const moonIcon = document.querySelector('.moon');
+
+    /* ====== CHARACTER SETS ====== */
+    const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
+    const NUMBERS = '0123456789';
+    const SYMBOLS = '!@#$%^&*()_+[]{}|;:,.<>?';
+
+    /* ====== THEME TOGGLE ====== */
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      sunIcon.style.display = isDark ? 'none' : 'block';
+      moonIcon.style.display = isDark ? 'block' : 'none';
+      localStorage.setItem('darkMode', isDark);
+    });
+
+    // Load saved theme
+    if (localStorage.getItem('darkMode') === 'false') {
+      document.body.classList.remove('dark');
+      sunIcon.style.display = 'block';
+      moonIcon.style.display = 'none';
+    }
+
+    /* ====== UTILITIES ====== */
+    function secureRandInt(min, max) {
+      const range = max - min;
+      const maxRange = 256;
+      if (range > maxRange) throw new Error('Range too large');
+      const byteArray = new Uint8Array(1);
+      let rand;
+      do {
+        crypto.getRandomValues(byteArray);
+        rand = byteArray[0];
+      } while (rand >= Math.floor(maxRange / range) * range);
+      return min + (rand % range);
+    }
+
+    function generatePassword() {
+      const length = +lengthSlider.value;
+      let charset = '';
+      if (uppercaseEl.checked) charset += UPPERCASE;
+      if (lowercaseEl.checked) charset += LOWERCASE;
+      if (numbersEl.checked) charset += NUMBERS;
+      if (symbolsEl.checked) charset += SYMBOLS;
+
+      if (!charset) {
+        passwordOutput.value = 'Select at least one option';
+        return;
+      }
+
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        const randIndex = secureRandInt(0, charset.length);
+        password += charset[randIndex];
+      }
+      passwordOutput.value = password;
+    }
+
+    /* ====== EVENT LISTENERS ====== */
+    // Sync length display and regenerate password on slider change
+    lengthSlider.addEventListener('input', () => {
+      lengthValue.textContent = lengthSlider.value;
+      generatePassword(); // Regenerate password as slider moves
+    });
+
+    generateBtn.addEventListener('click', generatePassword);
+
+    copyBtn.addEventListener('click', () => {
+      passwordOutput.select();
+      document.execCommand('copy');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    });
+
+    generatePassword();
+  </script>
+</body>
+</html>
